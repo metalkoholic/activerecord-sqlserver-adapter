@@ -203,7 +203,16 @@ module ActiveRecord
                       SELECT CAST(#{quoted_pk} AS #{id_sql_type}) FROM @ssaIdInsertTable
                     SQL
                   else
-                    sql.dup.insert sql.index(/ (DEFAULT )?VALUES/), " OUTPUT INSERTED.#{quoted_pk}"
+                    if pk.is_a?(Array)
+                      pk_statements = []
+                      pk.each do |p_key|
+                        pk_statements << " INSERTED.#{p_key}"
+                      end
+                      pk_statements = pk_statements.join(",")
+                    else
+                      pk_statements = " INSERTED.#{quoted_pk}"
+                    end
+                    sql.dup.insert sql.index(/ (DEFAULT )?VALUES/), " OUTPUT #{pk_statements}"
                   end
                 else
                   "#{sql}; SELECT CAST(SCOPE_IDENTITY() AS bigint) AS Ident"
